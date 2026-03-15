@@ -224,28 +224,47 @@ class BoatingConditionsCard extends HTMLElement {
 const styles = `
   :host {
     display: block;
+    --boating-card-divider: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.12);
+    --boating-card-panel: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.08);
+    --boating-card-panel-strong: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.12);
+    --boating-card-text-soft: var(--secondary-text-color);
+    --boating-card-text-bright: var(--primary-text-color);
+    --boating-card-sheen:
+      radial-gradient(circle at top left, rgba(77, 213, 232, 0.16), transparent 36%),
+      radial-gradient(circle at right 15%, rgba(255, 215, 123, 0.09), transparent 28%),
+      linear-gradient(155deg, rgba(8, 37, 59, 0.24) 0%, rgba(11, 70, 98, 0.16) 50%, rgba(19, 79, 104, 0.12) 100%);
   }
 
   ha-card {
     overflow: hidden;
-    border: 1px solid rgba(188, 230, 236, 0.18);
-    border-radius: 28px;
-    background:
-      radial-gradient(circle at top left, rgba(77, 213, 232, 0.26), transparent 36%),
-      radial-gradient(circle at right 15%, rgba(255, 215, 123, 0.12), transparent 28%),
-      linear-gradient(155deg, #08253b 0%, #0b4662 50%, #134f68 100%);
-    box-shadow: 0 18px 50px rgba(5, 17, 28, 0.35);
-    color: #f5fbff;
+    border: 1px solid var(--boating-card-divider);
+    border-radius: var(--ha-card-border-radius, 28px);
+    background: var(--ha-card-background, var(--card-background-color, rgba(0, 0, 0, 0.18)));
+    box-shadow: var(--ha-card-box-shadow, var(--shadow-elevation-2dp_-_box-shadow, none));
+    color: var(--boating-card-text-bright);
+    backdrop-filter: blur(18px) saturate(130%);
+    -webkit-backdrop-filter: blur(18px) saturate(130%);
   }
 
   .shell {
     position: relative;
     padding: 22px;
     font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+    isolation: isolate;
   }
 
   .shell.layout-landscape {
     padding: 20px 22px 18px;
+  }
+
+  .shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--boating-card-sheen);
+    pointer-events: none;
+    z-index: 0;
   }
 
   .glow {
@@ -253,7 +272,8 @@ const styles = `
     border-radius: 999px;
     pointer-events: none;
     filter: blur(28px);
-    opacity: 0.55;
+    opacity: 0.42;
+    z-index: 0;
   }
 
   .glow-a {
@@ -302,7 +322,7 @@ const styles = `
   .subhead span,
   .profile-badge,
   .footer span {
-    color: rgba(239, 248, 251, 0.82);
+    color: var(--boating-card-text-soft);
     font-size: 0.88rem;
   }
 
@@ -319,8 +339,9 @@ const styles = `
   }
 
   .profile-badge {
-    background: rgba(255, 255, 255, 0.1);
-    color: #e9faff;
+    background: var(--boating-card-panel);
+    color: var(--boating-card-text-bright);
+    border: 1px solid var(--boating-card-divider);
   }
 
   .body {
@@ -372,8 +393,8 @@ const styles = `
   .lamp {
     padding: 14px 12px 12px;
     border-radius: 22px;
-    background: rgba(255, 255, 255, 0.11);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: var(--boating-card-panel);
+    border: 1px solid var(--boating-card-divider);
     min-height: 164px;
   }
 
@@ -395,13 +416,13 @@ const styles = `
   }
 
   .lamp-date {
-    color: rgba(228, 241, 246, 0.8);
+    color: var(--boating-card-text-soft);
     font-size: 0.8rem;
     margin-top: 3px;
   }
 
   .lamp-feel {
-    color: #d7eef4;
+    color: var(--boating-card-text-bright);
     font-size: 0.84rem;
     margin-top: 8px;
   }
@@ -410,8 +431,8 @@ const styles = `
     width: 44px;
     height: 44px;
     border-radius: 999px;
-    border: 3px solid rgba(255, 255, 255, 0.25);
-    box-shadow: inset 0 0 0 2px rgba(6, 18, 28, 0.25);
+    border: 3px solid rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.18);
+    box-shadow: inset 0 0 0 2px rgba(6, 18, 28, 0.18);
   }
 
   .signal.rag-green {
@@ -436,7 +457,7 @@ const styles = `
     display: grid;
     gap: 6px;
     font-size: 0.82rem;
-    color: rgba(238, 248, 252, 0.88);
+    color: var(--boating-card-text-bright);
   }
 
   .metric-chip {
@@ -444,7 +465,8 @@ const styles = `
     width: fit-content;
     padding: 5px 10px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--boating-card-panel);
+    border: 1px solid var(--boating-card-divider);
   }
 
   .summary-panel {
@@ -452,8 +474,12 @@ const styles = `
     padding: 16px 18px;
     border-radius: 24px;
     background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
-    border: 1px solid rgba(255, 255, 255, 0.16);
+      linear-gradient(
+        135deg,
+        rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.12),
+        rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.05)
+      );
+    border: 1px solid var(--boating-card-divider);
   }
 
   .layout-landscape .summary-panel {
@@ -461,7 +487,7 @@ const styles = `
   }
 
   .summary-label {
-    color: #bdeaf3;
+    color: var(--boating-card-text-soft);
     font-size: 0.78rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -485,8 +511,8 @@ const styles = `
     align-items: start;
     padding: 12px 14px;
     border-radius: 18px;
-    background: rgba(6, 21, 32, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.05);
+    border: 1px solid var(--boating-card-divider);
   }
 
   .detail-pill {
@@ -502,7 +528,7 @@ const styles = `
   .detail-summary {
     font-size: 0.92rem;
     line-height: 1.45;
-    color: rgba(244, 251, 255, 0.92);
+    color: var(--boating-card-text-bright);
   }
 
   .footer {
@@ -511,12 +537,12 @@ const styles = `
     justify-content: space-between;
     margin-top: 16px;
     padding-top: 14px;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-top: 1px solid var(--boating-card-divider);
   }
 
   .empty {
     padding: 18px 0 4px;
-    color: rgba(243, 250, 255, 0.86);
+    color: var(--boating-card-text-bright);
   }
 
   @media (max-width: 640px) {
