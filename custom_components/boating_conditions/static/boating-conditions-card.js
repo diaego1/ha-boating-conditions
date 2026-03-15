@@ -167,9 +167,9 @@ class BoatingConditionsCard extends HTMLElement {
     const weekendLabel = attrs.weekend_label || "Upcoming weekend";
     const summary = attrs.summary || "No weekend summary is available yet.";
     const locationName = attrs.location_name || "Brighton Marina";
-    const boatProfile = attrs.boat_profile || "55 ft motor yacht";
     const updated = attrs.generated_at ? formatDateTime(attrs.generated_at) : "";
     const stateLabel = attrs.state_label || titleCase(overallRag);
+    const subheadItems = [locationName, weekendLabel];
 
     this.shadowRoot.innerHTML = `
       <style>${styles}</style>
@@ -182,13 +182,18 @@ class BoatingConditionsCard extends HTMLElement {
             <div>
               <h2>${escapeHtml(this._config.title)}</h2>
               <div class="subhead">
-                <span>${escapeHtml(locationName)}</span>
-                <span>${escapeHtml(weekendLabel)}</span>
+                ${subheadItems.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}
               </div>
             </div>
-            <div class="badges">
-              <span class="status-badge rag-${escapeHtml(overallRag)}">${escapeHtml(stateLabel)}</span>
-              <span class="profile-badge">${escapeHtml(boatProfile)}</span>
+            <div class="header-side">
+              <div class="badges">
+                <span class="status-badge rag-${escapeHtml(overallRag)}">${escapeHtml(stateLabel)}</span>
+              </div>
+              ${
+                this._config.show_last_updated && updated
+                  ? `<div class="updated-meta">Updated ${escapeHtml(updated)}</div>`
+                  : ""
+              }
             </div>
           </div>
 
@@ -209,11 +214,6 @@ class BoatingConditionsCard extends HTMLElement {
                 ${days.map((day) => renderDetail(day)).join("")}
               </div>
             </div>
-          </div>
-
-          <div class="footer">
-            <span>Daylight-only analysis using Open-Meteo forecast data.</span>
-            ${this._config.show_last_updated && updated ? `<span>Updated ${escapeHtml(updated)}</span>` : ""}
           </div>
         </div>
       </ha-card>
@@ -311,23 +311,27 @@ const styles = `
   }
 
   .subhead,
-  .badges,
-  .footer {
+  .badges {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
     align-items: center;
   }
 
+  .header-side {
+    display: grid;
+    gap: 8px;
+    justify-items: end;
+    text-align: right;
+  }
+
   .subhead span,
-  .profile-badge,
-  .footer span {
+  .updated-meta {
     color: var(--boating-card-text-soft);
     font-size: 0.88rem;
   }
 
-  .status-badge,
-  .profile-badge {
+  .status-badge {
     padding: 7px 12px;
     border-radius: 999px;
     backdrop-filter: blur(14px);
@@ -336,12 +340,6 @@ const styles = `
 
   .status-badge {
     color: #04141f;
-  }
-
-  .profile-badge {
-    background: var(--boating-card-panel);
-    color: var(--boating-card-text-bright);
-    border: 1px solid var(--boating-card-divider);
   }
 
   .body {
@@ -531,15 +529,6 @@ const styles = `
     color: var(--boating-card-text-bright);
   }
 
-  .footer {
-    position: relative;
-    z-index: 1;
-    justify-content: space-between;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid var(--boating-card-divider);
-  }
-
   .empty {
     padding: 18px 0 4px;
     color: var(--boating-card-text-bright);
@@ -548,6 +537,11 @@ const styles = `
   @media (max-width: 640px) {
     .shell {
       padding: 18px;
+    }
+
+    .header-side {
+      justify-items: start;
+      text-align: left;
     }
 
     .lamps {
