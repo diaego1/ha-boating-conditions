@@ -1,5 +1,8 @@
 # Boating Conditions
 
+> [!WARNING]
+> This project and much of its code/documentation have been largely AI-generated and only lightly reviewed by a human. The repository owner has limited coding knowledge. It may contain bugs, incorrect assumptions, incomplete validation, or unsafe logic. Use at your own risk. Always independently verify forecasts, tides, traffic, Notices to Mariners, and actual local conditions. Do not rely on this project as the sole basis for go/no-go boating decisions.
+
 HACS-ready custom Home Assistant integration and Lovelace card for a daylight-only Friday to Sunday boating outlook around Brighton Marina, using Open-Meteo weather and marine forecast data.
 
 The scoring is tuned for a 55 ft motor yacht and blends:
@@ -88,6 +91,103 @@ Set `layout: landscape` if you want the wider, shorter version of the card.
 - Friday, Saturday, and Sunday RAG sensors with per-day metrics and commentary
 
 The integration also exposes the `boating_conditions.refresh_forecast` service for manual refreshes or automations, and exposes the bundled card resource URL as `/api/boating_conditions/static/boating-conditions-card.js`.
+
+## How the RAG status is calculated
+
+This integration does not use Home Assistant AI, Assist, or an LLM to generate the boating narrative. The logic is deterministic and rule-based:
+
+1. Fetch weather and marine forecast data from Open-Meteo.
+2. Keep only daylight hours between the forecast sunrise and sunset.
+3. Build a per-day view for Friday, Saturday, and Sunday.
+4. Score each day using wind, gusts, sea state, wind chop, swell, wave steepness, and onshore exposure.
+5. Convert that score into `green`, `yellow`, or `red`.
+6. Generate the narrative text from code-based templates using the resulting conditions.
+
+The code currently uses two layers:
+
+- A weighted score built from the forecast inputs.
+- Direct caution and hard-red trigger thresholds that can override the score.
+
+### Main thresholds
+
+These are the practical skipper-facing breakpoints used by the logic today:
+
+| Factor | Green feel | Yellow feel | Red feel |
+|---|---|---|---|
+| Wind max | Under 16 kt | 16-23 kt | 24+ kt |
+| Gusts | Under 24 kt | 24-31 kt | 32+ kt |
+| Sea state / wave max | Under 0.8 m | 0.8-1.39 m | 1.4+ m |
+| Wind chop max | Under 0.45 m | 0.45-0.84 m | 0.85+ m |
+| Combined swell max | Under 0.75 m | 0.75-1.29 m | 1.3+ m |
+| Wave steepness index | Under 0.13 | 0.13-0.19 | 0.20+ with at least 0.8 m waves |
+
+### Direct yellow triggers
+
+Any one of these is enough to make a day at least `yellow`:
+
+- Wind max `>= 16 kt`
+- Gust max `>= 24 kt`
+- Wave max `>= 0.8 m`
+- Wind chop `>= 0.45 m`
+- Combined swell `>= 0.75 m`
+- Steepness index `>= 0.13`
+- Onshore wind for `3+` daylight hours
+- Onshore swell for `2+` daylight hours
+
+### Direct red triggers
+
+Any one of these is enough to make a day `red`:
+
+- Wind max `>= 24 kt`
+- Gust max `>= 32 kt`
+- Wave max `>= 1.4 m`
+- Wind chop `>= 0.85 m`
+- Combined swell `>= 1.3 m` and swell period `>= 8 s`
+- Steepness index `>= 0.20` and waves `>= 0.8 m`
+- Onshore wind for `5+` daylight hours and wind max `>= 20 kt`
+
+### Weighted score
+
+When a direct trigger does not already decide the result, the score is built from:
+
+- Wind max: `30%`
+- Gust max: `15%`
+- Sea state / wave max: `20%`
+- Wind chop max: `10%`
+- Swell max: `15%`
+- Wave steepness: `10%`
+- Extra onshore penalty: `+8` for persistent stronger onshore wind, `+10` for persistent onshore swell
+
+The final RAG decision is:
+
+- `Red` if any hard-red trigger fires, or score `>= 65`
+- `Yellow` if not red, but any caution trigger fires, or score `>= 35`
+- `Green` otherwise
+
+### Brighton-specific onshore logic
+
+The code treats directions between `120` and `240` degrees as onshore for the Brighton frontage. That means persistent SE through SW wind or swell can push a day toward yellow or red more quickly than the raw height/wind numbers alone might suggest.
+
+### Yacht length setting
+
+The setup flow asks for motor yacht length in feet, and the default is `55 ft`.
+
+Important caveat: at the moment, that value does **not** numerically rescale the thresholds above.
+
+Today, yacht length is used for:
+
+- The displayed boat profile text
+- The narrative wording
+- The disclaimer text
+
+Today, yacht length is **not** used for:
+
+- Changing wind thresholds
+- Changing wave/swell thresholds
+- Changing the weighted score
+- Changing green/yellow/red trigger points
+
+So the current implementation should still be understood as a ruleset tuned around a `55 ft motor yacht`, even if a user enters a different boat length during setup.
 
 ## How daylight filtering works
 
