@@ -1,0 +1,21 @@
+boating_conditions_weekend_briefing:
+  alias: Boating Conditions weekend briefing
+  mode: single
+  sequence:
+    - variables:
+        rag_entity: sensor.brighton_marina_weekend_rag
+        weekend_summary: >-
+          {{ state_attr(rag_entity, 'summary') | default('No weekend summary available.', true) }}
+        days: >-
+          {{ state_attr(rag_entity, 'days') | default([], true) }}
+    - action: persistent_notification.create
+      data:
+        title: Boating Conditions weekend outlook
+        message: >-
+          {{ weekend_summary }}
+
+          {% for day in days %}
+          {{ day.label }}: {{ day.rag | upper }}. {{ day.summary }}
+          {% endfor %}
+
+          Guidance only. Check local forecasts, tides, notices, and live conditions before departure.

@@ -1,0 +1,3 @@
+refresh_forecast:
+  name: Refresh forecast
+  description: Refresh the Open-Meteo weekend boating outlook immediately.

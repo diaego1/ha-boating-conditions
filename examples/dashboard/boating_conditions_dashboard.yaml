@@ -1,0 +1,14 @@
+# Add the JS resource in Settings > Dashboards > Resources first:
+#   URL: /api/boating_conditions/static/boating-conditions-card.js
+#   Type: module
+
+views:
+  - title: Boating
+    path: boating
+    sections:
+      - type: grid
+        cards:
+          - type: custom:boating-conditions-card
+            entity: sensor.brighton_marina_weekend_rag
+            title: Boating Conditions
+            show_last_updated: true

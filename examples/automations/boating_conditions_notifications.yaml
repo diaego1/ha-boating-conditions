@@ -1,0 +1,35 @@
+- alias: Boating Conditions weekend outlook briefing
+  id: boating_conditions_weekend_outlook_briefing
+  triggers:
+    - trigger: time
+      at: "18:00:00"
+  conditions:
+    - condition: time
+      weekday:
+        - thu
+        - fri
+  actions:
+    - action: boating_conditions.refresh_forecast
+    - delay: "00:00:05"
+    - action: script.boating_conditions_weekend_briefing
+
+- alias: Boating Conditions red-day alert
+  id: boating_conditions_red_day_alert
+  triggers:
+    - trigger: state
+      entity_id:
+        - sensor.brighton_marina_friday_rag
+        - sensor.brighton_marina_saturday_rag
+        - sensor.brighton_marina_sunday_rag
+      to: "red"
+  conditions:
+    - condition: template
+      value_template: >-
+        {{ trigger.from_state is not none and trigger.from_state.state != 'red' }}
+  actions:
+    - action: persistent_notification.create
+      data:
+        title: Boating Conditions caution
+        message: >-
+          {{ trigger.to_state.name }} is red.
+          {{ state_attr(trigger.entity_id, 'summary') }}

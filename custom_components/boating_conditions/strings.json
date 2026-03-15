@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Boating Conditions",
+        "description": "Create a daylight-only Friday to Sunday boating outlook for Brighton Marina.",
+        "data": {
+          "name": "Integration name",
+          "location_name": "Location name",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "timezone": "Timezone",
+          "yacht_length_ft": "Motor yacht length (ft)",
+          "update_interval_hours": "Refresh interval (hours)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach Open-Meteo",
+      "invalid_timezone": "Timezone is not valid",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This forecast location is already configured"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "weekend_rag": {
+        "name": "Weekend RAG"
+      },
+      "friday_rag": {
+        "name": "Friday RAG"
+      },
+      "saturday_rag": {
+        "name": "Saturday RAG"
+      },
+      "sunday_rag": {
+        "name": "Sunday RAG"
+      }
+    }
+  }
+}

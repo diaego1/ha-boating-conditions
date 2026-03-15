@@ -1,0 +1,14 @@
+{
+  "domain": "boating_conditions",
+  "name": "Boating Conditions",
+  "after_dependencies": ["http"],
+  "codeowners": ["@diaego1"],
+  "config_flow": true,
+  "documentation": "https://github.com/diaego1/ha-boating-conditions#readme",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/diaego1/ha-boating-conditions/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "1.0.0"
+}
