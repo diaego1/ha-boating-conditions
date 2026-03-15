@@ -41,6 +41,7 @@ This is guidance only. It does not replace local forecasts, tide planning, Notic
    7. Click `Create`.
    8. Refresh your browser tab once, then add the card to a dashboard using `type: custom:boating-conditions-card`.
    9. When you add the card, Home Assistant should usually suggest the correct weekend sensor automatically. If it does not, open the card settings and choose the sensor whose entity id ends with `weekend_rag`.
+   10. If Home Assistant still seems to be using an older version of the card after an update, edit the resource and temporarily change the URL to `/api/boating_conditions/static/boating-conditions-card.js?v=2`, then refresh the browser again.
 
 For the best HACS upgrade experience, publish GitHub releases rather than only pushing tags or branch commits.
 
@@ -61,6 +62,7 @@ Default settings use approximate Brighton Marina coordinates and `Europe/London`
    7. Click `Create`
    8. Refresh the browser tab, then add the card to a dashboard using `type: custom:boating-conditions-card`.
    9. If the card is added without a sensor selected, edit the card and choose the weekend sensor whose entity id ends with `weekend_rag`.
+   10. If Home Assistant still shows old card behavior after an update, change the resource URL to `/api/boating_conditions/static/boating-conditions-card.js?v=2` to force the browser to fetch the latest file, then refresh again.
 
 ## GitHub metadata
 
