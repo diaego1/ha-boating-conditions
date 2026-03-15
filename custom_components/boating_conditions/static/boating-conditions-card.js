@@ -9,6 +9,7 @@ class BoatingConditionsCard extends HTMLElement {
   setConfig(config) {
     this._config = {
       title: "Boating Conditions",
+      layout: "portrait",
       show_last_updated: true,
       ...(config || {}),
     };
@@ -21,13 +22,13 @@ class BoatingConditionsCard extends HTMLElement {
   }
 
   getCardSize() {
-    return 7;
+    return this._config?.layout === "landscape" ? 5 : 7;
   }
 
   getGridOptions() {
     return {
       columns: 12,
-      min_rows: 7,
+      min_rows: this._config?.layout === "landscape" ? 5 : 7,
     };
   }
 
@@ -36,6 +37,7 @@ class BoatingConditionsCard extends HTMLElement {
     return {
       type: "custom:boating-conditions-card",
       title: "Boating Conditions",
+      layout: "portrait",
       show_last_updated: true,
       ...(entity ? { entity } : {}),
     };
@@ -50,15 +52,15 @@ class BoatingConditionsCard extends HTMLElement {
       return;
     }
 
+    const layout = normalizeLayout(this._config.layout);
     const candidateEntity = findCandidateEntity(this._hass);
     if (!this._config.entity) {
       this.shadowRoot.innerHTML = `
         <style>${styles}</style>
-        <ha-card>
-          <div class="shell">
+        <ha-card class="card layout-${layout}">
+          <div class="shell layout-${layout}">
             <div class="header">
               <div>
-                <div class="eyebrow">RAG status</div>
                 <h2>${escapeHtml(this._config.title || "Boating Conditions")}</h2>
               </div>
             </div>
@@ -81,11 +83,10 @@ class BoatingConditionsCard extends HTMLElement {
     if (!stateObj) {
       this.shadowRoot.innerHTML = `
         <style>${styles}</style>
-        <ha-card>
-          <div class="shell">
+        <ha-card class="card layout-${layout}">
+          <div class="shell layout-${layout}">
             <div class="header">
               <div>
-                <div class="eyebrow">RAG status</div>
                 <h2>${escapeHtml(this._config.title)}</h2>
               </div>
             </div>
@@ -108,14 +109,13 @@ class BoatingConditionsCard extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>${styles}</style>
-      <ha-card class="card">
-        <div class="shell">
+      <ha-card class="card layout-${layout}">
+        <div class="shell layout-${layout}">
           <div class="glow glow-a"></div>
           <div class="glow glow-b"></div>
 
           <div class="header">
             <div>
-              <div class="eyebrow">RAG status</div>
               <h2>${escapeHtml(this._config.title)}</h2>
               <div class="subhead">
                 <span>${escapeHtml(locationName)}</span>
@@ -128,17 +128,23 @@ class BoatingConditionsCard extends HTMLElement {
             </div>
           </div>
 
-          <div class="lamps">
-            ${days.map((day) => renderLamp(day)).join("")}
-          </div>
+          <div class="body layout-${layout}">
+            <div class="primary-column">
+              <div class="lamps">
+                ${days.map((day) => renderLamp(day)).join("")}
+              </div>
 
-          <div class="summary-panel">
-            <div class="summary-label">Weekend feel</div>
-            <div class="summary-text">${escapeHtml(summary)}</div>
-          </div>
+              <div class="summary-panel">
+                <div class="summary-label">Weekend feel</div>
+                <div class="summary-text">${escapeHtml(summary)}</div>
+              </div>
+            </div>
 
-          <div class="detail-list">
-            ${days.map((day) => renderDetail(day)).join("")}
+            <div class="secondary-column">
+              <div class="detail-list">
+                ${days.map((day) => renderDetail(day)).join("")}
+              </div>
+            </div>
           </div>
 
           <div class="footer">
@@ -172,6 +178,10 @@ const styles = `
     position: relative;
     padding: 22px;
     font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+  }
+
+  .shell.layout-landscape {
+    padding: 20px 22px 18px;
   }
 
   .glow {
@@ -209,20 +219,8 @@ const styles = `
     margin-bottom: 18px;
   }
 
-  .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 10px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #bfeaf0;
-    font-size: 0.76rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
   h2 {
-    margin: 10px 0 8px;
+    margin: 0 0 8px;
     font-size: 1.6rem;
     line-height: 1.05;
     letter-spacing: 0.01em;
@@ -261,6 +259,25 @@ const styles = `
     color: #e9faff;
   }
 
+  .body {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 14px;
+  }
+
+  .body.layout-landscape {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+    align-items: start;
+  }
+
+  .primary-column,
+  .secondary-column {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+  }
+
   .rag-green {
     background: #85e89a;
   }
@@ -278,12 +295,14 @@ const styles = `
   }
 
   .lamps {
-    position: relative;
-    z-index: 1;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
     margin-bottom: 18px;
+  }
+
+  .layout-landscape .lamps {
+    margin-bottom: 0;
   }
 
   .lamp {
@@ -292,6 +311,10 @@ const styles = `
     background: rgba(255, 255, 255, 0.11);
     border: 1px solid rgba(255, 255, 255, 0.14);
     min-height: 164px;
+  }
+
+  .layout-landscape .lamp {
+    min-height: 136px;
   }
 
   .lamp-head {
@@ -361,14 +384,16 @@ const styles = `
   }
 
   .summary-panel {
-    position: relative;
-    z-index: 1;
     margin-bottom: 14px;
     padding: 16px 18px;
     border-radius: 24px;
     background:
       linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
     border: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .layout-landscape .summary-panel {
+    margin-bottom: 0;
   }
 
   .summary-label {
@@ -385,8 +410,6 @@ const styles = `
   }
 
   .detail-list {
-    position: relative;
-    z-index: 1;
     display: grid;
     gap: 10px;
   }
@@ -459,6 +482,12 @@ const styles = `
       font-size: 0.9rem;
     }
   }
+
+  @media (max-width: 900px) {
+    .body.layout-landscape {
+      grid-template-columns: 1fr;
+    }
+  }
 `;
 
 function renderLamp(day) {
@@ -527,6 +556,10 @@ function titleCase(value) {
     .replace(/\b\w/g, (match) => match.toUpperCase());
 }
 
+function normalizeLayout(value) {
+  return value === "landscape" ? "landscape" : "portrait";
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -569,6 +602,7 @@ class BoatingConditionsCardEditor extends HTMLElement {
   setConfig(config) {
     this._config = {
       title: "Boating Conditions",
+      layout: "portrait",
       show_last_updated: true,
       ...(config || {}),
     };
@@ -661,6 +695,18 @@ class BoatingConditionsCardEditor extends HTMLElement {
           <input id="title" type="text" value="${escapeHtml(this._config.title || "Boating Conditions")}" />
         </label>
 
+        <label>
+          Layout
+          <select id="layout">
+            <option value="portrait" ${
+              normalizeLayout(this._config.layout) === "portrait" ? "selected" : ""
+            }>Portrait</option>
+            <option value="landscape" ${
+              normalizeLayout(this._config.layout) === "landscape" ? "selected" : ""
+            }>Landscape</option>
+          </select>
+        </label>
+
         <label class="toggle">
           <input id="show_last_updated" type="checkbox" ${
             this._config.show_last_updated !== false ? "checked" : ""
@@ -679,6 +725,9 @@ class BoatingConditionsCardEditor extends HTMLElement {
     });
     this.shadowRoot.getElementById("title")?.addEventListener("input", (event) => {
       this._updateConfig("title", event.target.value);
+    });
+    this.shadowRoot.getElementById("layout")?.addEventListener("change", (event) => {
+      this._updateConfig("layout", normalizeLayout(event.target.value));
     });
     this.shadowRoot
       .getElementById("show_last_updated")

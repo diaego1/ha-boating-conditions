@@ -74,8 +74,11 @@ The manifest and HACS metadata now point at:
 type: custom:boating-conditions-card
 entity: sensor.brighton_marina_weekend_rag
 title: Boating Conditions
+layout: portrait
 show_last_updated: true
 ```
+
+Set `layout: landscape` if you want the wider, shorter version of the card.
 
 ## Entities created
 
