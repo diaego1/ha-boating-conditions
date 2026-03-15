@@ -10,5 +10,9 @@
   "issue_tracker": "https://github.com/diaego1/ha-boating-conditions/issues",
   "requirements": [],
   "single_config_entry": true,
+<<<<<<< HEAD
   "version": "1.0.1"
+=======
+  "version": "0.1.0"
+>>>>>>> 790e6be14cf7136e2efb4506e29ef3659444371b
 }
