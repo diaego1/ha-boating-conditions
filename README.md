@@ -31,7 +31,16 @@ This is guidance only. It does not replace local forecasts, tide planning, Notic
 2. In HACS, add it as a custom repository of type `Integration`, then download it.
 3. Restart Home Assistant.
 4. Add the `Boating Conditions` integration from Settings > Devices & Services.
-5. In Lovelace resources, add `/api/boating_conditions/static/boating-conditions-card.js` as a `module`.
+5. Add the dashboard card file to Home Assistant:
+   1. In Home Assistant, open the left sidebar and go to `Settings` > `Dashboards`.
+   2. If you do not see `Settings` or the `Resources` option, click your user/profile icon at the very bottom of the sidebar and turn on `Advanced Mode`, then come back to `Settings` > `Dashboards`.
+   3. On the `Dashboards` page, click the three-dot menu in the top-right corner and choose `Resources`.
+   4. Click `Add Resource`.
+   5. In `URL`, enter `/api/boating_conditions/static/boating-conditions-card.js`
+   6. In `Resource type`, choose `JavaScript Module`.
+   7. Click `Create`.
+   8. Refresh your browser tab once, then add the card to a dashboard using `type: custom:boating-conditions-card`.
+   9. When you add the card, Home Assistant should usually suggest the correct weekend sensor automatically. If it does not, open the card settings and choose the sensor whose entity id ends with `weekend_rag`.
 
 For the best HACS upgrade experience, publish GitHub releases rather than only pushing tags or branch commits.
 
@@ -42,7 +51,16 @@ Default settings use approximate Brighton Marina coordinates and `Europe/London`
 1. Copy `custom_components/boating_conditions` into your Home Assistant config directory.
 2. Restart Home Assistant.
 3. Add the `Boating Conditions` integration from Settings > Devices & Services.
-4. In Lovelace resources, add `/api/boating_conditions/static/boating-conditions-card.js` as a `module`.
+4. Add the dashboard card file to Home Assistant:
+   1. Go to `Settings` > `Dashboards`.
+   2. If the `Resources` option is missing, open your user/profile page from the bottom-left of the sidebar, enable `Advanced Mode`, and return to `Settings` > `Dashboards`.
+   3. Click the three-dot menu in the top-right corner and select `Resources`.
+   4. Click `Add Resource`.
+   5. Set `URL` to `/api/boating_conditions/static/boating-conditions-card.js`
+   6. Set `Resource type` to `JavaScript Module`
+   7. Click `Create`
+   8. Refresh the browser tab, then add the card to a dashboard using `type: custom:boating-conditions-card`.
+   9. If the card is added without a sensor selected, edit the card and choose the weekend sensor whose entity id ends with `weekend_rag`.
 
 ## GitHub metadata
 

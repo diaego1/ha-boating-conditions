@@ -7,14 +7,10 @@ class BoatingConditionsCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config || !config.entity) {
-      throw new Error("The card needs an entity");
-    }
-
     this._config = {
       title: "Boating Conditions",
       show_last_updated: true,
-      ...config,
+      ...(config || {}),
     };
     this._render();
   }
@@ -35,8 +31,49 @@ class BoatingConditionsCard extends HTMLElement {
     };
   }
 
+  static getStubConfig(hass) {
+    const entity = findCandidateEntity(hass);
+    return {
+      type: "custom:boating-conditions-card",
+      title: "Boating Conditions",
+      show_last_updated: true,
+      ...(entity ? { entity } : {}),
+    };
+  }
+
+  static getConfigElement() {
+    return document.createElement("boating-conditions-card-editor");
+  }
+
   _render() {
     if (!this.shadowRoot || !this._config) {
+      return;
+    }
+
+    const candidateEntity = findCandidateEntity(this._hass);
+    if (!this._config.entity) {
+      this.shadowRoot.innerHTML = `
+        <style>${styles}</style>
+        <ha-card>
+          <div class="shell">
+            <div class="header">
+              <div>
+                <div class="eyebrow">RAG status</div>
+                <h2>${escapeHtml(this._config.title || "Boating Conditions")}</h2>
+              </div>
+            </div>
+            <div class="empty">
+              <p>This card needs the main weekend Boating Conditions sensor.</p>
+              ${
+                candidateEntity
+                  ? `<p>Suggested entity: <code>${escapeHtml(candidateEntity)}</code></p>`
+                  : "<p>No matching weekend sensor was found yet. Make sure the Boating Conditions integration is installed and configured first.</p>"
+              }
+              <p>Open the card settings and choose the sensor that ends with <code>weekend_rag</code>.</p>
+            </div>
+          </div>
+        </ha-card>
+      `;
       return;
     }
 
@@ -499,8 +536,191 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
+function getCandidateEntities(hass) {
+  if (!hass?.states) {
+    return [];
+  }
+
+  return Object.entries(hass.states)
+    .filter(([entityId, stateObj]) => {
+      if (!entityId.startsWith("sensor.")) {
+        return false;
+      }
+
+      const attrs = stateObj?.attributes || {};
+      return Array.isArray(attrs.days) && typeof attrs.summary === "string";
+    })
+    .map(([entityId]) => entityId)
+    .sort();
+}
+
+function findCandidateEntity(hass) {
+  return getCandidateEntities(hass)[0] || "";
+}
+
+class BoatingConditionsCardEditor extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this._config = {};
+    this._hass = null;
+  }
+
+  setConfig(config) {
+    this._config = {
+      title: "Boating Conditions",
+      show_last_updated: true,
+      ...(config || {}),
+    };
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (!this._config.entity) {
+      const candidateEntity = findCandidateEntity(hass);
+      if (candidateEntity) {
+        this._config = {
+          ...this._config,
+          entity: candidateEntity,
+        };
+        this._dispatchConfig();
+      }
+    }
+    this._render();
+  }
+
+  _render() {
+    if (!this.shadowRoot) {
+      return;
+    }
+
+    const entities = getCandidateEntities(this._hass);
+    const options = entities.length
+      ? entities
+          .map(
+            (entityId) => `
+              <option value="${escapeHtml(entityId)}" ${
+                this._config.entity === entityId ? "selected" : ""
+              }>${escapeHtml(entityId)}</option>
+            `
+          )
+          .join("")
+      : '<option value="">No Boating Conditions weekend sensor found yet</option>';
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        .editor {
+          display: grid;
+          gap: 16px;
+          padding: 8px 0;
+          font-family: var(--paper-font-body1_-_font-family);
+          color: var(--primary-text-color);
+        }
+
+        label {
+          display: grid;
+          gap: 6px;
+          font-size: 0.95rem;
+          font-weight: 500;
+        }
+
+        input,
+        select {
+          padding: 10px 12px;
+          border-radius: 10px;
+          border: 1px solid var(--divider-color);
+          background: var(--card-background-color);
+          color: var(--primary-text-color);
+          font: inherit;
+        }
+
+        .toggle {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          font-weight: 500;
+        }
+
+        .hint {
+          color: var(--secondary-text-color);
+          font-size: 0.9rem;
+          line-height: 1.45;
+        }
+      </style>
+      <div class="editor">
+        <label>
+          Weekend sensor
+          <select id="entity">
+            ${options}
+          </select>
+        </label>
+
+        <label>
+          Card title
+          <input id="title" type="text" value="${escapeHtml(this._config.title || "Boating Conditions")}" />
+        </label>
+
+        <label class="toggle">
+          <input id="show_last_updated" type="checkbox" ${
+            this._config.show_last_updated !== false ? "checked" : ""
+          } />
+          Show last updated time
+        </label>
+
+        <div class="hint">
+          Choose the main Boating Conditions weekend sensor. In most setups this is the sensor whose entity id ends with <code>weekend_rag</code>.
+        </div>
+      </div>
+    `;
+
+    this.shadowRoot.getElementById("entity")?.addEventListener("change", (event) => {
+      this._updateConfig("entity", event.target.value);
+    });
+    this.shadowRoot.getElementById("title")?.addEventListener("input", (event) => {
+      this._updateConfig("title", event.target.value);
+    });
+    this.shadowRoot
+      .getElementById("show_last_updated")
+      ?.addEventListener("change", (event) => {
+        this._updateConfig("show_last_updated", event.target.checked);
+      });
+  }
+
+  _updateConfig(key, value) {
+    const nextConfig = {
+      ...this._config,
+      [key]: value,
+    };
+
+    if (!nextConfig.title) {
+      nextConfig.title = "Boating Conditions";
+    }
+
+    this._config = nextConfig;
+    this._dispatchConfig();
+  }
+
+  _dispatchConfig() {
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config: this._config },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+}
+
 if (!customElements.get("boating-conditions-card")) {
   customElements.define("boating-conditions-card", BoatingConditionsCard);
+}
+
+if (!customElements.get("boating-conditions-card-editor")) {
+  customElements.define(
+    "boating-conditions-card-editor",
+    BoatingConditionsCardEditor
+  );
 }
 
 window.customCards = window.customCards || [];
